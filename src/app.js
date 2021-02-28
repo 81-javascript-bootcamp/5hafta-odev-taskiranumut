@@ -8,22 +8,25 @@ class PomodoroApp {
     this.$taskFormInput = this.$taskForm.querySelector('input');
   }
 
+  addTaskButtonActivated() {
+    const $formButton = document.getElementById('form-button');
+    $formButton.disabled = false;
+    $formButton.innerHTML = 'Add Task';
+  }
+
   addTask(task) {
     addTaskToApi(task)
       .then((data) => data.json())
       .then((newTask) => {
         this.addTaskToTable(newTask);
-        const $formButton = document.getElementById('form-button');
-        $formButton.disabled = false;
-        $formButton.innerHTML = 'Add Task';
+        this.addTaskButtonActivated();
       });
   }
 
   addTaskToTable(task, index) {
     const $newTaskEl = document.createElement('tr');
-    const closeButtons = this.getCloseButtons();
-    const newIndex = index ? index : closeButtons.length + 1;
-    $newTaskEl.innerHTML = `<th scope="row">${newIndex}</th><td>${task.title}</td>
+    const newIndex = index ? index : this.getCloseButtons().length + 1;
+    $newTaskEl.innerHTML = `<th class="index" scope="row">${newIndex}</th><td>${task.title}</td>
     <td><button type='button' class="close" id="${task.id}" aria-label="Close">X</button></td>`;
     this.$tableTbody.appendChild($newTaskEl);
     this.handleDeleteTask();
@@ -52,11 +55,24 @@ class PomodoroApp {
     return document.querySelectorAll('button.close');
   }
 
+  getTaskRowAndRemove(item) {
+    const taskRow = item.parentNode.parentNode;
+    taskRow.remove();
+    this.findIndexAndFix();
+  }
+
+  findIndexAndFix() {
+    const $thIndexs = document.querySelectorAll('th.index');
+    $thIndexs.forEach((th, index) => {
+      th.innerHTML = index + 1;
+    });
+  }
+
   handleDeleteTask() {
     const closeButtons = this.getCloseButtons();
     closeButtons.forEach((item) => {
       item.addEventListener('click', () => {
-        deleteFromApi(item.id).then(() => location.reload());
+        deleteFromApi(item.id).then(() => this.getTaskRowAndRemove(item));
       });
     });
   }
