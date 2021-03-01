@@ -1,4 +1,4 @@
-import { getDataFromApi, addTaskToApi } from './data';
+import { getDataFromApi, addTaskToApi, deleteFromApi } from './data.js';
 
 class PomodoroApp {
   constructor(options) {
@@ -8,17 +8,34 @@ class PomodoroApp {
     this.$taskFormInput = this.$taskForm.querySelector('input');
   }
 
+  addTaskButtonActivated() {
+    const $formButton = document.getElementById('form-button');
+    $formButton.disabled = false;
+    $formButton.innerHTML = 'Add Task';
+  }
+
+  addTaskButtonDisabled() {
+    const $formButton = document.getElementById('form-button');
+    $formButton.disabled = true;
+    $formButton.innerHTML = `<div class="spinner-border spinner-border-sm text-light" role="status"></div>`;
+  }
+
   addTask(task) {
+    this.addTaskButtonDisabled();
     addTaskToApi(task)
       .then((data) => data.json())
       .then((newTask) => {
         this.addTaskToTable(newTask);
+        this.addTaskButtonActivated();
       });
   }
 
   addTaskToTable(task, index) {
     const $newTaskEl = document.createElement('tr');
-    $newTaskEl.innerHTML = `<th scope="row">${task.id}</th><td>${task.title}</td>`;
+    const $allCloseButtonsArr = document.querySelectorAll('button.close');
+    const newIndex = index ? index : $allCloseButtonsArr.length + 1;
+    $newTaskEl.innerHTML = `<th class="index" scope="row">${newIndex}</th><td>${task.title}</td>
+    <td><button type='button' class="close" id="${task.id}" aria-label="Close">X</button></td>`;
     this.$tableTbody.appendChild($newTaskEl);
     this.$taskFormInput.value = '';
   }
@@ -26,8 +43,10 @@ class PomodoroApp {
   handleAddTask() {
     this.$taskForm.addEventListener('submit', (e) => {
       e.preventDefault();
-      const task = { title: this.$taskFormInput.value };
-      this.addTask(task);
+      if (this.$taskFormInput.value) {
+        const task = { title: this.$taskFormInput.value };
+        this.addTask(task);
+      }
     });
   }
 
@@ -36,6 +55,35 @@ class PomodoroApp {
       currentTasks.forEach((task, index) => {
         this.addTaskToTable(task, index + 1);
       });
+      this.handleDeleteTask();
+    });
+  }
+
+  getTaskRowAndRemove(item) {
+    const $taskRowEl = item.parentNode.parentNode;
+    $taskRowEl.remove();
+    this.findIndexAndFix();
+  }
+
+  findIndexAndFix() {
+    const $thIndexsArr = document.querySelectorAll('th.index');
+    $thIndexsArr.forEach((th, index) => {
+      th.innerHTML = index + 1;
+    });
+  }
+
+  handleDeleteTask() {
+    const $closeButtonsDiv = document.getElementById('buttons');
+    $closeButtonsDiv.addEventListener('click', (event) => {
+      if (event.target.className === 'close') {
+        const closeButtonId = event.target.id;
+        const $closeButtonEl = document.getElementById(closeButtonId);
+        $closeButtonEl.disabled = true;
+        deleteFromApi(closeButtonId).then(() => {
+          this.getTaskRowAndRemove($closeButtonEl);
+          $closeButtonEl.disabled = false;
+        });
+      }
     });
   }
 

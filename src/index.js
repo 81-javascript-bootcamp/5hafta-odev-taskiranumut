@@ -1,6 +1,6 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './styles/main.css';
-import PomodoroApp from './app';
+import PomodoroApp from './app.js';
 
 let pomodoroApp = new PomodoroApp({
   tableTbodySelector: '#table-tbody',

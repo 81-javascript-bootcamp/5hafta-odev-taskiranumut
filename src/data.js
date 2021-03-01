@@ -1,4 +1,4 @@
-import { API_URL } from './constans';
+import { API_URL } from './constans.js';
 
 export const getDataFromApi = () => {
   return fetch(API_URL)
@@ -14,5 +14,11 @@ export const addTaskToApi = (task) => {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(task),
+  });
+};
+
+export const deleteFromApi = (taskId) => {
+  return fetch(`${API_URL}/${taskId}`, {
+    method: 'delete',
   });
 };
