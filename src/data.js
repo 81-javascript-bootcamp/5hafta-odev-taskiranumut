@@ -7,7 +7,6 @@ export const getDataFromApi = () => {
 };
 
 export const addTaskToApi = (task) => {
-  addTaskButtonDisabled();
   return fetch(API_URL, {
     method: 'post',
     headers: {
@@ -23,9 +22,3 @@ export const deleteFromApi = (taskId) => {
     method: 'delete',
   });
 };
-
-function addTaskButtonDisabled() {
-  const $formButton = document.getElementById('form-button');
-  $formButton.disabled = true;
-  $formButton.innerHTML = `<div class="spinner-border spinner-border-sm text-light" role="status"></div>`;
-}

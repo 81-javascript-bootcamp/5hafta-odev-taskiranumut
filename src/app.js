@@ -14,7 +14,14 @@ class PomodoroApp {
     $formButton.innerHTML = 'Add Task';
   }
 
+  addTaskButtonDisabled() {
+    const $formButton = document.getElementById('form-button');
+    $formButton.disabled = true;
+    $formButton.innerHTML = `<div class="spinner-border spinner-border-sm text-light" role="status"></div>`;
+  }
+
   addTask(task) {
+    this.addTaskButtonDisabled();
     addTaskToApi(task)
       .then((data) => data.json())
       .then((newTask) => {
@@ -25,11 +32,11 @@ class PomodoroApp {
 
   addTaskToTable(task, index) {
     const $newTaskEl = document.createElement('tr');
-    const newIndex = index ? index : this.getCloseButtons().length + 1;
+    const $allCloseButtonsArr = document.querySelectorAll('button.close');
+    const newIndex = index ? index : $allCloseButtonsArr.length + 1;
     $newTaskEl.innerHTML = `<th class="index" scope="row">${newIndex}</th><td>${task.title}</td>
     <td><button type='button' class="close" id="${task.id}" aria-label="Close">X</button></td>`;
     this.$tableTbody.appendChild($newTaskEl);
-    this.handleDeleteTask();
     this.$taskFormInput.value = '';
   }
 
@@ -48,32 +55,35 @@ class PomodoroApp {
       currentTasks.forEach((task, index) => {
         this.addTaskToTable(task, index + 1);
       });
+      this.handleDeleteTask();
     });
   }
 
-  getCloseButtons() {
-    return document.querySelectorAll('button.close');
-  }
-
   getTaskRowAndRemove(item) {
-    const taskRow = item.parentNode.parentNode;
-    taskRow.remove();
+    const $taskRowEl = item.parentNode.parentNode;
+    $taskRowEl.remove();
     this.findIndexAndFix();
   }
 
   findIndexAndFix() {
-    const $thIndexs = document.querySelectorAll('th.index');
-    $thIndexs.forEach((th, index) => {
+    const $thIndexsArr = document.querySelectorAll('th.index');
+    $thIndexsArr.forEach((th, index) => {
       th.innerHTML = index + 1;
     });
   }
 
   handleDeleteTask() {
-    const closeButtons = this.getCloseButtons();
-    closeButtons.forEach((item) => {
-      item.addEventListener('click', () => {
-        deleteFromApi(item.id).then(() => this.getTaskRowAndRemove(item));
-      });
+    const $closeButtonsDiv = document.getElementById('buttons');
+    $closeButtonsDiv.addEventListener('click', (event) => {
+      if (event.target.className === 'close') {
+        const closeButtonId = event.target.id;
+        const $closeButtonEl = document.getElementById(closeButtonId);
+        $closeButtonEl.disabled = true;
+        deleteFromApi(closeButtonId).then(() => {
+          this.getTaskRowAndRemove($closeButtonEl);
+          $closeButtonEl.disabled = false;
+        });
+      }
     });
   }
 
